@@ -1,6 +1,6 @@
 {
   "name": "pi-pstack",
-  "version": "0.15.28-pi.1",
+  "version": "0.15.28-pi.2",
   "private": true,
   "description": "pstack (cursor/plugins) packaged for Pi. Generated from pstack/ by scripts/generate-pstack-pi-tree.mjs; see FORK.md.",
   "license": "MIT",

@@ -10,6 +10,11 @@ const SKILLS = join(PSTACK, "skills");
 // Outside pstack/ so Cursor, which copies the whole plugin folder, does not install this tree too.
 const OUT = join(ROOT, "harness", "pstack-pi");
 const EXTENSION = join(ROOT, "pi", "extension.ts");
+// Pi-only agents, already in pi-subagents format.
+const PI_AGENTS = join(ROOT, "pi", "agents");
+// pstack routes to these cursor-team-kit skills but does not ship them. They live in this repo, so the tree ships them.
+const TEAM_KIT = join(ROOT, "cursor-team-kit");
+const TEAM_KIT_SKILLS = ["deslop", "control-cli", "control-ui"];
 const TREE = "pi";
 const ADAPTER = "docs/harness/pi.md";
 const GUIDE = "docs/guide";
@@ -19,7 +24,7 @@ const GITHUB = "https://github.com/cursor/plugins";
 const LINK = /\]\(([^)\s]+)\)/g;
 const README = `# pstack Pi tree
 
-This folder is generated from \`pstack/skills\`, \`pstack/agents\`, \`pstack/${GUIDE}\`, \`pstack/${ADAPTER}\`, \`pstack/README.md\`, \`pstack/LICENSE\`, and \`pi/extension.ts\`. Do not edit it by hand.
+This folder is generated from \`pstack/skills\`, \`pstack/agents\`, \`pstack/${GUIDE}\`, \`pstack/${ADAPTER}\`, \`pstack/README.md\`, \`pstack/LICENSE\`, the \`cursor-team-kit\` skills ${TEAM_KIT_SKILLS.map((name) => `\`${name}\``).join(", ")}, \`pi/agents\`, and \`pi/extension.ts\`. Do not edit it by hand.
 
 Pi installs it through the root \`package.json\`. The tree leaves out the rest of \`pstack/\`, such as \`pstack/automations\` and \`pstack/assets\`. A relative link to a pstack file that the tree leaves out points at that file on GitHub \`main\` instead.
 
@@ -48,6 +53,8 @@ const TERMS = [
   { key: "~/.cursor/plugins/", re: /\.cursor\/plugins|\.cursor-plugin/ },
   { key: ".cursor/rules/", re: /\.cursor\/rules|always-applied rule/ },
   { key: "agent-transcripts", re: /agent-transcripts|\.cursor\/projects/ },
+  { key: "cursor-team-kit", re: /cursor-team-kit/ },
+  { key: "`/loop`", re: /\/loop\b/ },
   { key: "Cursor-only features", re: /Bugbot|Cursor [Aa]utomation|cursor\.(sh|com)\/automations|[Cc]loud [Aa]gent|built-in PR tool/ },
 ];
 const ROUTE_KEY = "Run another pstack skill";
@@ -65,10 +72,14 @@ function file(path) {
   return { bytes: readFileSync(path), executable: (statSync(path).mode & 0o111) !== 0 };
 }
 
-const skills = readdirSync(SKILLS).filter((name) => existsSync(join(SKILLS, name, "SKILL.md")));
+const SOURCES = new Map([
+  ...readdirSync(SKILLS).filter((name) => existsSync(join(SKILLS, name, "SKILL.md"))).map((name) => [name, join(SKILLS, name)]),
+  ...TEAM_KIT_SKILLS.map((name) => [name, join(TEAM_KIT, "skills", name)]),
+]);
+const skills = [...SOURCES.keys()];
 
 function classify(skill) {
-  const dir = join(SKILLS, skill);
+  const dir = SOURCES.get(skill);
   const others = skills.filter((name) => name !== skill).join("|");
   const route = new RegExp(`the \\*\\*(?<bold>${others})\\*\\* skill|\`/(?<command>${others})\``, "g");
   const linksToSkill = (line, name) => line.includes(`(../${name}/`);
@@ -92,7 +103,7 @@ for (const [skill, { usesCursorNames, wrap }] of classes) {
   if (usesCursorNames.size > 0 && !wrap) problems.push(`skills/${skill}/SKILL.md uses Cursor names but has no H1`);
   for (const key of usesCursorNames) users.set(key, [...(users.get(key) ?? []), skill]);
   // Cursor runs a skill by its folder name and Pi lists it by its frontmatter `name`, so the two must match. The Agent Skills spec limits both to SKILL_NAME.
-  const frontmatter = readFileSync(join(SKILLS, skill, "SKILL.md"), "utf8").match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
+  const frontmatter = readFileSync(join(SOURCES.get(skill), "SKILL.md"), "utf8").match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
   const name = frontmatter.match(/^name:(.*)$/m)?.[1].trim().replace(/^(["'])(.*)\1$/, "$2");
   if (name !== skill) problems.push(`skills/${skill}/SKILL.md has name ${JSON.stringify(name ?? "")}, not its folder name ${skill}`);
   if (!SKILL_NAME.test(skill) || skill.length > 64) problems.push(`skills/${skill} is not lowercase words joined by hyphens, at most 64 characters`);
@@ -145,6 +156,9 @@ function render() {
     join(PSTACK, "README.md"),
   ];
   const files = new Map(copies.map((path) => [relative(PSTACK, path), file(path)]));
+  for (const name of TEAM_KIT_SKILLS) {
+    for (const path of walk(SOURCES.get(name))) files.set(`skills/${name}/${relative(SOURCES.get(name), path)}`, file(path));
+  }
   const line =
     `In Pi, read [the Pi adapter](../../${ADAPTER}) once per session before you follow this skill. ` +
     "It maps the Cursor names in pstack skills to Pi.";
@@ -155,9 +169,11 @@ function render() {
   }
   files.set("LICENSE", file(join(PSTACK, "LICENSE")));
   files.set("extensions/pstack.ts", file(EXTENSION));
+  files.set("LICENSE-cursor-team-kit", file(join(TEAM_KIT, "LICENSE")));
   for (const [path, entry] of files) {
     if (path.startsWith("agents/") && path.endsWith(".md")) entry.bytes = Buffer.from(piAgent(path, entry.bytes.toString("utf8")));
   }
+  for (const path of walk(PI_AGENTS)) files.set(`agents/${relative(PI_AGENTS, path)}`, file(path));
   for (const manifest of MANIFESTS) files.set(manifest, file(join(PSTACK, "plugin.json")));
   for (const [path, entry] of files) {
     if (!path.endsWith(".md")) continue;
