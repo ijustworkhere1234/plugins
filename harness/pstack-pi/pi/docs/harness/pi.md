@@ -8,7 +8,7 @@ This adapter assumes the Pi packages `@tintinweb/pi-subagents` (the `Agent` tool
 
 | Cursor | Pi |
 | --- | --- |
-| `Task` | `Agent` (`subagent_type`, `prompt`, `description`). Read a background result with `get_subagent_result`; redirect a running agent with `steer_subagent`. Without the `Agent` tool, do the work inline and say so. |
+| `Task` | `Agent` (`subagent_type`, `prompt`, `description`). Read a background result with `get_subagent_result`; redirect a running agent with `steer_subagent`. Never spawn a pstack subagent with pi-tasks' `TaskExecute`: it takes no `thinking`, `isolation`, or `resume`, so it drops the role's reasoning level. Without the `Agent` tool, do the work inline and say so. |
 | `AskQuestion` | `ask_user`, one question per call. In `pi -p` mode it is absent, so ask in plain text. |
 | Open a todolist | `TaskCreate` for each item and `TaskUpdate` as each phase finishes; `TaskList` to show it. These pi-tasks tools are unrelated to Cursor's `Task`. Without them, keep the list in your reply and update it at each phase. |
 | Run another pstack skill (`/name` or "the **name** skill") | `read` `<pstack>/skills/<name>/SKILL.md` and follow it. When you tell the user to type it, write `/skill:<name>`. |
@@ -19,8 +19,8 @@ This adapter assumes the Pi packages `@tintinweb/pi-subagents` (the `Agent` tool
 | Cursor | Pi `Agent` |
 | --- | --- |
 | `subagent_type: generalPurpose` | `subagent_type: "general-purpose"` |
-| `poteto-agent`, `comment-sicko` | `subagent_type: "poteto-agent"`, `subagent_type: "comment-sicko"`. pi-pstack ships both, so they are listed with no prefix. |
-| `readonly: true` | `subagent_type: "Explore"`. Also write "do not edit files" in the prompt, and check `git status` afterward. |
+| `poteto-agent`, `comment-sicko` | `subagent_type: "poteto-agent"`, `subagent_type: "comment-sicko"`. pi-pstack ships both, plus `pstack-readonly`, so they are listed with no prefix. |
+| `readonly: true` | `subagent_type: "pstack-readonly"`. It has only read-only tools plus `bash`, so also write "do not edit files" in the prompt, and check `git status` afterward. Do not use `Explore`: its model is pinned to a small fast model, so your `model` is ignored, and it reads only excerpts. |
 | `readonly: false` | `general-purpose`, or the named agent. |
 | `environment: "cloud"` | `isolation: "worktree"`. Name the branch or commit the worker checks out. |
 | `environment: "local"` | Omit. |
@@ -57,6 +57,13 @@ Follow its steps with these changes:
 | `.cursor/rules/*.mdc`, always-applied rules | `AGENTS.md` in the project, or `~/.pi/agent/AGENTS.md` for every project. Pi never reads `.mdc` files. The model rule is the exception. See Models. |
 | `https://github.com/cursor/plugins/blob/main/pstack/<path>` | `<pstack>/<path>` when that file exists. The package ships the skills, `docs/guide/`, and `README.md`. Read the local copy and never fetch it. Give the user the URL when they need a link. |
 | Transcripts in `~/.cursor/projects/<slug>/agent-transcripts/` | `~/.pi/agent/sessions/--<slug>--/*.jsonl`. The slug is the workspace path without its leading `/`, with each `/` changed to `-`, so `/Users/you/proj` is `--Users-you-proj--`. The newest `.jsonl` in that folder is the current session. A subagent's transcript is the `.output` path its `Agent` result names, or read it with `get_subagent_result`. Read only this workspace's folder. |
+
+## Cursor built-ins and cursor-team-kit
+
+| Cursor | Pi |
+| --- | --- |
+| `/loop [interval] <prompt>` | The pi-pstack `/loop` command, with the same shape: it re-sends the prompt to this session as a new user turn every interval (`30s`, `5m`, `2h`, `1d`; 10s minimum), or with no interval as a dynamic loop where you choose each next delay with `loop_next`. "until X" is part of the prompt, so call `loop_stop` with the evidence when X holds. When a step tells you to arm a loop, call `loop_start` with the tick prompt and interval; Pi slash commands are typed by the user. A loop lives only as long as the Pi session. It does not survive a restart. |
+| `cursor-team-kit` skills `deslop`, `control-cli`, `control-ui` | pi-pstack ships these three. Read `<pstack>/skills/<name>/SKILL.md`, or tell the user `/skill:<name>`. pi-pstack ships no other `cursor-team-kit` skill. Skip a step that needs one with the Cursor-only line below. |
 
 ## Cursor-only features
 

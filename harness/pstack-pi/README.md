@@ -1,6 +1,6 @@
 # pstack Pi tree
 
-This folder is generated from `pstack/skills`, `pstack/agents`, `pstack/docs/guide`, `pstack/docs/harness/pi.md`, `pstack/README.md`, `pstack/LICENSE`, and `pi/extension.ts`. Do not edit it by hand.
+This folder is generated from `pstack/skills`, `pstack/agents`, `pstack/docs/guide`, `pstack/docs/harness/pi.md`, `pstack/README.md`, `pstack/LICENSE`, the `cursor-team-kit` skills `deslop`, `control-cli`, `control-ui`, `pi/agents`, and `pi/extension.ts`. Do not edit it by hand.
 
 Pi installs it through the root `package.json`. The tree leaves out the rest of `pstack/`, such as `pstack/automations` and `pstack/assets`. A relative link to a pstack file that the tree leaves out points at that file on GitHub `main` instead.
 
