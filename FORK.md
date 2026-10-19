@@ -13,10 +13,13 @@
 All additions; nothing upstream is modified:
 
 1. `pstack/docs/harness/pi.md`: the Cursor-to-Pi adapter, next to upstream's `claude-code.md`. It targets `@tintinweb/pi-subagents` (`Agent`), `pi-ask-user` (`ask_user`), and `@tintinweb/pi-tasks` (`TaskCreate`).
-2. `pi/extension.ts`: adds a short pstack section to every Pi system prompt (the absolute `<pstack>` path, read the adapter) and appends `~/.pi/agent/pstack-models.md` when it exists.
-3. `scripts/generate-pstack-pi-tree.mjs`: a fork of upstream's `generate-pstack-harness-trees.mjs`. It builds `harness/pstack-pi/pi/` and **fails if a skill uses a Cursor term the Pi adapter has no row for**. It also converts the two agents to pi-subagents format (`is_background` → `run_in_background`, `prompt_mode: append`, one line telling them where `<pstack>` is).
-4. `harness/pstack-pi/`: the generated tree. Never edit it by hand.
-5. `package.json`: the Pi manifest (skills, extension, subagents). Upstream has no root `package.json`.
+2. `pi/extension.ts`:
+   - Adds a short pstack section to every Pi system prompt (the absolute `<pstack>` path, read the adapter) and appends `~/.pi/agent/pstack-models.md` when it exists.
+   - `/loop [interval] <prompt>`, `/loop stop`, `/loop status`, and the tools `loop_start`, `loop_next`, `loop_stop`: the Pi version of Cursor's built-in `/loop`. It re-sends the prompt to the same session on a fixed interval, or dynamically when the agent picks each delay. It lasts only as long as the session.
+3. `pi/agents/pstack-readonly.md`: the Pi mapping for `readonly: true`. pi-subagents' `Explore` pins its own small model and reads excerpts, so it cannot stand in.
+4. `scripts/generate-pstack-pi-tree.mjs`: a fork of upstream's `generate-pstack-harness-trees.mjs`. It builds `harness/pstack-pi/pi/` and **fails if a skill uses a Cursor term the Pi adapter has no row for** (we added `cursor-team-kit` and `/loop` to its terms). It converts the two pstack agents to pi-subagents format, copies `pi/agents/`, and ships the `cursor-team-kit` skills pstack routes to: `deslop`, `control-cli`, `control-ui`.
+5. `harness/pstack-pi/`: the generated tree. Never edit it by hand.
+6. `package.json`: the Pi manifest (skills, extension, subagents). Upstream has no root `package.json`.
 
 ## Updating (pull latest upstream, regenerate, reinstall)
 
@@ -26,7 +29,7 @@ git fetch upstream
 git rebase upstream/main                          # on pi
 node scripts/generate-pstack-pi-tree.mjs          # FAIL = upstream added a Cursor term; add a row to pstack/docs/harness/pi.md
 node scripts/generate-pstack-pi-tree.mjs --check
-git diff --stat upstream/main                     # must show ONLY the 5 paths above
+git diff --stat upstream/main                     # must show ONLY the paths above (plus FORK.md)
 git add -A && git commit -m "chore(pi): regenerate for upstream <sha>"   # if the tree changed
 git push --force-with-lease origin HEAD:main
 git push --force-with-lease origin pi
@@ -36,6 +39,8 @@ git rev-list --count origin/main..upstream/main   # must print 0
 Bump `version` in `package.json` to `<upstream pstack version>-pi.<n>` when the upstream version changes. A git-installed copy picks up the update with `pi update`; a local-path install picks it up on the next session. Running sessions keep the skills they started with.
 
 ## Testing without touching the real Pi config
+
+`/loop` needs an interactive session, so drive the TUI in tmux (`tmux new-session -d ... "PI_CODING_AGENT_DIR=$T pi --no-session"`, then `send-keys` and `capture-pane`). Everything else can use `pi -p`.
 
 Use a throwaway Pi home. Pi here authenticates through the AI Gateway, so no credentials are copied.
 
@@ -69,6 +74,9 @@ cp ~/.multimango/worktrees/AGENTS.md.pre-pstack ~/.multimango/worktrees/AGENTS.m
 Restart Pi sessions after either direction.
 
 ## Pitfalls
+
+- Agent frontmatter is YAML. Quote a `description` that contains `: `, or pi-subagents silently skips the agent.
+- An agent's `tools:` limits only built-in tools. Extension tools (pi-tasks, pi-goal, loop_*) still load, so `pstack-readonly` denies the state-changing ones with `disallowed_tools`.
 
 - Upstream regenerates `harness/pstack/` (the Claude Code tree) in its CI. Never edit it; ours is `harness/pstack-pi/`.
 - After every rebase, check `git diff --stat upstream/main` and understand every file in it.
