@@ -1,0 +1,17 @@
+{
+  "name": "pi-pstack",
+  "version": "0.15.28-pi.1",
+  "private": true,
+  "description": "pstack (cursor/plugins) packaged for Pi. Generated from pstack/ by scripts/generate-pstack-pi-tree.mjs; see FORK.md.",
+  "license": "MIT",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./harness/pstack-pi/pi/skills"],
+    "extensions": ["./harness/pstack-pi/pi/extensions/pstack.ts"],
+    "prompts": [],
+    "themes": [],
+    "subagents": {
+      "agents": ["./harness/pstack-pi/pi/agents"]
+    }
+  }
+}
