@@ -75,3 +75,13 @@ Pi has no Cursor Automations, Bugbot, Cursor cloud agents, or built-in PR tool. 
 | Bugbot | Bugbot comments on a GitHub PR are ordinary review threads, so triage them with the forge command that the step gives. Skip a step that starts, waits for, or configures Bugbot when the PR has no Bugbot check or comment. |
 | Cursor cloud agents | `environment: "cloud"` maps to a worktree, as in Subagent fields. Skip a step that needs the cloud agent itself, such as its dashboard status or its own machine. |
 | A built-in PR tool | Use the forge command that the step gives, such as `gh pr create`. That is not a skip, so write no line. |
+
+### PR status in Pi
+
+A forge command shows only what you ask it for. `gh pr checks` reports CI and nothing about reviews. Before you report a PR's status, call it ready, enqueue it, or offer to merge it, read all of these for the current head:
+
+- CI: `gh pr checks <number>`.
+- Review state: `gh pr view <number> --json headRefOid,reviewDecision,mergeStateStatus,reviews`.
+- Unresolved review threads: the GraphQL `reviewThreads` connection, outdated threads included. `gh pr view` does not expose them.
+
+A `CHANGES_REQUESTED` review or an unresolved thread blocks the PR the same way a failing check does, including one from a review bot. Check again after every push, because a new head can dismiss an approval or bring new comments. If the repository documents its own merge-readiness rules, follow them.
