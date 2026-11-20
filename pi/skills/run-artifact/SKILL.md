@@ -1,16 +1,23 @@
 ---
 name: run-artifact
-description: Keep one living Meta Artifact per multi-step run (plan, progress, open questions, decisions, resume point) so humans can track and share it from a link. Read when a pstack skill or the Pi adapter sends you here.
+description: Opt-in: keep one living Meta Artifact per multi-step run (plan, progress, open questions, decisions, resume point) so humans can track and share it from a link. Read when a pstack skill or the Pi adapter sends you here.
 disable-model-invocation: true
 ---
 
 # Run artifact
 
-A run's plan and progress belong where a human can open them, not only in local files and this chat. Each run keeps one Markdown Meta Artifact, visible to anyone at Meta with the link. Local state stays the source of truth. The artifact is the human view of it.
+A run's plan and progress can live where a human can open and share them, not only in local files and this chat. A run the operator opts in keeps one Markdown Meta Artifact, visible to anyone at Meta with the link. Local state stays the source of truth. The artifact is the human view of it.
 
-## When a run gets one
+## Ask before you start
 
-Create it when the work has a plan or a task list of three or more items, or when a playbook writes a plan file, a status page, human gates, a decision trail, or a resume note. Skip it for a single question or a small fix.
+A run gets an artifact only when the operator says so. Settle it before work starts, with the other clarifying questions:
+
+- If the operator already said, in the request or earlier in the session, follow that and do not ask.
+- If an artifact for this work already exists (a pickup, or the operator links one), keep updating it and do not ask.
+- Otherwise ask once, with `ask_user`, only when the work has a plan or a task list of three or more items, or a playbook will write a plan file, a status page, human gates, a decision trail, or a resume note. Never ask for a single question or a small fix.
+- No answer, or no `ask_user`, means no artifact.
+
+The answer holds for the whole run. Do not ask again at later phases.
 
 Only the coordinator, the agent talking to the operator, writes it. Subagents report back and never publish.
 

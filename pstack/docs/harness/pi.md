@@ -67,7 +67,7 @@ Follow its steps with these changes:
 
 ## Run artifacts
 
-A multi-step run keeps its plan and progress in one living Meta Artifact, so the operator can track it and share the link. Read `<pstack>/skills/run-artifact/SKILL.md` and follow it whenever a skill does one of these:
+A multi-step run can keep its plan and progress in one living Meta Artifact, so the operator can track it and share the link. It is opt-in: before a multi-step run starts, read `<pstack>/skills/run-artifact/SKILL.md`, and settle with the operator whether this run gets one. Only when it does, follow that skill whenever a skill does one of these:
 
 | Skill step | Pi |
 | --- | --- |
