@@ -65,6 +65,20 @@ Follow its steps with these changes:
 | `/loop [interval] <prompt>` | The pi-pstack `/loop` command, with the same shape: it re-sends the prompt to this session as a new user turn every interval (`30s`, `5m`, `2h`, `1d`; 10s minimum), or with no interval as a dynamic loop where you choose each next delay with `loop_next`. "until X" is part of the prompt, so call `loop_stop` with the evidence when X holds. When a step tells you to arm a loop, call `loop_start` with the tick prompt and interval; Pi slash commands are typed by the user. A loop lives only as long as the Pi session. It does not survive a restart. |
 | `cursor-team-kit` skills `deslop`, `control-cli`, `control-ui` | pi-pstack ships these three. Read `<pstack>/skills/<name>/SKILL.md`, or tell the user `/skill:<name>`. pi-pstack ships no other `cursor-team-kit` skill. Skip a step that needs one with the Cursor-only line below. |
 
+## Run artifacts
+
+A multi-step run keeps its plan and progress in one living Meta Artifact, so the operator can track it and share the link. Read `<pstack>/skills/run-artifact/SKILL.md` and follow it whenever a skill does one of these:
+
+| Skill step | Pi |
+| --- | --- |
+| Open a todolist with three or more items, or write a plan file (`playbooks/multi-phase-plan.md`) | Keep the local file or task list, and publish the run artifact with the plan and its link. |
+| Write a status page, `status.md`, or a status message (`playbooks/orchestrate.md`, `/loop` ticks) | Rebuild and publish the run artifact at the same point. |
+| Park a human gate, `gates.md`, or a question for the operator | List it under the artifact's Questions for the operator, and still ask with `ask_user` or in chat. |
+| Keep a decision trail (the **show-me-your-work** skill) | Keep the TSV, and show its latest rows in the artifact. |
+| Write a resume note (`playbooks/pause-safely.md`), or pick up a session (`playbooks/session-pickup.md`) | Put the note in the artifact's Resume section. On pickup, read the artifact first. |
+
+When `meta` is not on the path, skip this with the Cursor-only line below.
+
 ## Cursor-only features
 
 Pi has no Cursor Automations, Bugbot, Cursor cloud agents, or built-in PR tool. When a step needs one, put one line in your reply, `Skipped in Pi: <step>. <reason>.`, then go on to the next step. Do not stop, ask, or retry. When a later step needs what the skipped step made, such as a URL or a key, leave a placeholder and name it in the line.

@@ -12,6 +12,8 @@ const OUT = join(ROOT, "harness", "pstack-pi");
 const EXTENSION = join(ROOT, "pi", "extension.ts");
 // Pi-only agents, already in pi-subagents format.
 const PI_AGENTS = join(ROOT, "pi", "agents");
+// Fork-only skills, such as run-artifact, which the Pi adapter routes to.
+const PI_SKILLS = join(ROOT, "pi", "skills");
 // pstack routes to these cursor-team-kit skills but does not ship them. They live in this repo, so the tree ships them.
 const TEAM_KIT = join(ROOT, "cursor-team-kit");
 const TEAM_KIT_SKILLS = ["deslop", "control-cli", "control-ui"];
@@ -75,6 +77,7 @@ function file(path) {
 const SOURCES = new Map([
   ...readdirSync(SKILLS).filter((name) => existsSync(join(SKILLS, name, "SKILL.md"))).map((name) => [name, join(SKILLS, name)]),
   ...TEAM_KIT_SKILLS.map((name) => [name, join(TEAM_KIT, "skills", name)]),
+  ...readdirSync(PI_SKILLS).filter((name) => existsSync(join(PI_SKILLS, name, "SKILL.md"))).map((name) => [name, join(PI_SKILLS, name)]),
 ]);
 const skills = [...SOURCES.keys()];
 
@@ -156,8 +159,10 @@ function render() {
     join(PSTACK, "README.md"),
   ];
   const files = new Map(copies.map((path) => [relative(PSTACK, path), file(path)]));
-  for (const name of TEAM_KIT_SKILLS) {
-    for (const path of walk(SOURCES.get(name))) files.set(`skills/${name}/${relative(SOURCES.get(name), path)}`, file(path));
+  // Skills from outside pstack/skills: the cursor-team-kit ones and pi/skills.
+  for (const [name, dir] of SOURCES) {
+    if (dir === join(SKILLS, name)) continue;
+    for (const path of walk(dir)) files.set(`skills/${name}/${relative(dir, path)}`, file(path));
   }
   const line =
     `In Pi, read [the Pi adapter](../../${ADAPTER}) once per session before you follow this skill. ` +
